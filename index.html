@@ -1005,12 +1005,20 @@
             const [isHeaderBlurred, setIsHeaderBlurred] = useState(false);
             const t = CONTENT[lang];
             
-            const { scrollYProgress } = useScroll();
+            const { scrollYProgress, scrollY } = useScroll();
             const scaleX = useSpring(scrollYProgress, {
                 stiffness: 100,
                 damping: 30,
                 restDelta: 0.001
             });
+
+            // ヘッダーのフェードイン: タイトルセクション終了後(100vh)から200pxの範囲でフェードイン
+            const headerOpacity = useTransform(
+                scrollY,
+                [typeof window !== 'undefined' ? window.innerHeight : 800, typeof window !== 'undefined' ? window.innerHeight + 200 : 1000],
+                [0, 1]
+            );
+            const smoothHeaderOpacity = useSpring(headerOpacity, { damping: 30, stiffness: 200 });
 
             const toggleLang = () => {
                 setLang(prev => prev === 'en' ? 'jp' : 'en');
@@ -1023,7 +1031,7 @@
                     <motion.div className="fixed top-0 left-0 right-0 h-1.5 bg-[#FF4D00] origin-left z-50" style={{ scaleX }} />
 
                     <nav className={`fixed top-0 w-full z-40 bg-white/0 transition-all duration-300 ${isHeaderBlurred ? 'backdrop-blur-sm' : ''}`}>
-                        <div className="max-w-[90rem] mx-auto px-6 md:px-12 h-20 flex items-center justify-between">
+                        <motion.div className="max-w-[90rem] mx-auto px-6 md:px-12 h-20 flex items-center justify-between" style={{ opacity: smoothHeaderOpacity }}>
                             <div className="flex items-center gap-3 group cursor-pointer">
                                 <span className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-bold text-xl group-hover:bg-[#FF4D00] transition-colors duration-300">G</span>
                                 <span className="text-2xl font-black tracking-tighter mix-blend-difference text-white">GriCon</span>
@@ -1039,7 +1047,7 @@
                                     {t.nav.spec} <ArrowRight size={16} />
                                 </a>
                             </div>
-                        </div>
+                        </motion.div>
                     </nav>
 
                     <HeroScrollStory t={t} onLockChange={(locked) => setIsHeaderBlurred(!locked)} />
