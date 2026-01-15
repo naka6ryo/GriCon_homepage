@@ -217,9 +217,9 @@
                 },
                 cta: {
                     title: (
-                        <span className="whitespace-nowrap">
+                        <>
                         <span className="text-[#FF4D00]">創</span>造を始めよう<span className="text-[#FF4D00]">。</span>
-                        </span>
+                        </>
                     ),
                     desc: "回路図から開発思想まで。\n全てをNotionで公開中。",
                     button: "ドキュメントを読む"
@@ -1121,22 +1121,19 @@
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: 0.2 }}
-                                    className="md:col-span-1 md:row-span-1 bg-black rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden group order-3"
+                                    className="md:col-span-1 md:row-span-1 bg-[#FF4D00] rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden group order-3"
                                 >
-                                    <div className="absolute inset-0 z-0">
-                                        <img 
-                                            src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800" 
-                                            alt="Squeeze Animation" 
-                                            className="w-full h-full object-cover opacity-60 mix-blend-overlay transition-opacity duration-300 group-hover:opacity-80"
-                                        />
-                                    </div>
                                     <div className="relative z-10 text-white flex flex-col h-full justify-between">
                                         <div>
-                                            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md">
-                                                <Minimize2 size={28} className="text-[#FF4D00]" />
-                                            </div>
-                                            <h3 className="text-4xl md:text-5xl font-black mb-4 tracking-tight drop-shadow-md">{t.bento.squeezeTitle}</h3>
-                                            <p className="text-lg md:text-xl text-gray-400 font-medium whitespace-pre-wrap drop-shadow-md leading-relaxed">{t.bento.squeezeDesc}</p>
+                                            <motion.div 
+                                                className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md"
+                                                animate={{ scaleX: [1, 0.7, 1] }}
+                                                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1, ease: "easeInOut" }}
+                                            >
+                                                <Minimize2 size={28} className="text-white" />
+                                            </motion.div>
+                                            <h3 className="text-4xl md:text-5xl font-black mb-4 tracking-tight drop-shadow-md text-white">{t.bento.squeezeTitle}</h3>
+                                            <p className="text-lg md:text-xl text-white/90 font-medium whitespace-pre-wrap drop-shadow-md leading-relaxed">{t.bento.squeezeDesc}</p>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -1147,20 +1144,17 @@
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: 0.3 }}
-                                    className="md:col-span-1 md:row-span-1 bg-[#FF4D00] rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden group order-4"
+                                    className="md:col-span-1 md:row-span-1 bg-[#999999] rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden group order-4"
                                 >
-                                    <div className="absolute inset-0 z-0">
-                                        <img 
-                                            src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800" 
-                                            alt="Feedback Animation" 
-                                            className="w-full h-full object-cover opacity-50 mix-blend-hard-light transition-transform duration-700 group-hover:scale-110" 
-                                        />
-                                    </div>
                                     <div className="relative z-10 h-full flex flex-col justify-between">
                                         <div>
-                                            <div className="w-14 h-14 bg-black/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md">
+                                            <motion.div 
+                                                className="w-14 h-14 bg-black/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md"
+                                                animate={{ x: [0, -2, 2, -2, 2, -1, 1, 0], y: [0, -2, 2, -1, 1, -2, 2, 0] }}
+                                                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
+                                            >
                                                 <Waves size={28} className="text-white opacity-90" />
-                                            </div>
+                                            </motion.div>
                                             <h3 className="text-4xl md:text-5xl font-black mb-4 drop-shadow-md text-white whitespace-nowrap">{t.bento.feedbackTitle}</h3>
                                             <p className="text-lg md:text-xl text-white/90 font-medium drop-shadow-md whitespace-pre-wrap leading-relaxed">{t.bento.feedbackDesc}</p>
                                         </div>
@@ -1173,7 +1167,7 @@
                     <div id="model-view" className="w-full h-screen bg-[#101010] relative overflow-hidden flex flex-col md:flex-row items-center">
                         <div className="relative z-10 w-full md:w-1/2 p-10 md:pl-24 flex flex-col justify-center text-white pointer-events-none h-full bg-gradient-to-r from-black/80 to-transparent">
                             <motion.div key={lang} initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-                                <h2 className="text-6xl md:text-8xl font-black mb-6 leading-[0.9] tracking-tighter whitespace-nowrap">{t.model.title}</h2>
+                                <h2 className="text-4xl md:text-8xl font-black mb-6 leading-[0.9] tracking-tighter whitespace-nowrap">{t.model.title}</h2>
                                 <p className="text-xl text-gray-400 font-medium max-w-md leading-relaxed whitespace-pre-wrap">{t.model.desc}</p>
                             </motion.div>
                         </div>
@@ -1223,7 +1217,7 @@
                     <Section className="bg-[#1D1D1F] text-white text-center py-48 md:py-64 relative">
                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20" />
                         <motion.div key={lang} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-4xl mx-auto relative z-10">
-                            <h2 className="text-6xl md:text-9xl font-black mb-10 tracking-tighter leading-none">{t.cta.title}</h2>
+                            <h2 className="text-4xl md:text-9xl font-black mb-10 tracking-tighter leading-none">{t.cta.title}</h2>
                             <p className="text-2xl text-gray-400 mb-16 max-w-2xl mx-auto font-medium whitespace-pre-wrap">{t.cta.desc}</p>
                             <a href={NOTION_LINK} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 px-16 py-6 bg-white text-black rounded-full text-2xl font-bold hover:bg-[#FF4D00] hover:text-white transition-all duration-300 transform hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,77,0,0.4)]">
                                 {t.cta.button} <ExternalLink size={24} />
