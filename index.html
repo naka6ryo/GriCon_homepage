@@ -1120,18 +1120,20 @@
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    transition={{ delay: 0.2 }}
+                                    animate={{ scaleX: [1, 0.95, 1] }}
+                                    transition={{ 
+                                        opacity: { delay: 0.2 },
+                                        y: { delay: 0.2 },
+                                        scaleX: { duration: 2, repeat: Infinity, repeatDelay: 1, ease: "easeInOut" }
+                                    }}
+                                    style={{ originX: 0.5 }}
                                     className="md:col-span-1 md:row-span-1 bg-[#FF4D00] rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden group order-3"
                                 >
                                     <div className="relative z-10 text-white flex flex-col h-full justify-between">
                                         <div>
-                                            <motion.div 
-                                                className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md"
-                                                animate={{ scaleX: [1, 0.7, 1] }}
-                                                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1, ease: "easeInOut" }}
-                                            >
+                                            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md">
                                                 <Minimize2 size={28} className="text-white" />
-                                            </motion.div>
+                                            </div>
                                             <h3 className="text-4xl md:text-5xl font-black mb-4 tracking-tight drop-shadow-md text-white">{t.bento.squeezeTitle}</h3>
                                             <p className="text-lg md:text-xl text-white/90 font-medium whitespace-pre-wrap drop-shadow-md leading-relaxed">{t.bento.squeezeDesc}</p>
                                         </div>
@@ -1143,18 +1145,19 @@
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    transition={{ delay: 0.3 }}
+                                    animate={{ x: [0, -2, 2, -2, 2, -1, 1, 0], y: [0, -2, 2, -1, 1, -2, 2, 0] }}
+                                    transition={{ 
+                                        opacity: { delay: 0.3 },
+                                        x: { duration: 0.6, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" },
+                                        y: { duration: 0.6, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }
+                                    }}
                                     className="md:col-span-1 md:row-span-1 bg-[#999999] rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden group order-4"
                                 >
                                     <div className="relative z-10 h-full flex flex-col justify-between">
                                         <div>
-                                            <motion.div 
-                                                className="w-14 h-14 bg-black/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md"
-                                                animate={{ x: [0, -2, 2, -2, 2, -1, 1, 0], y: [0, -2, 2, -1, 1, -2, 2, 0] }}
-                                                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
-                                            >
+                                            <div className="w-14 h-14 bg-black/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md">
                                                 <Waves size={28} className="text-white opacity-90" />
-                                            </motion.div>
+                                            </div>
                                             <h3 className="text-4xl md:text-5xl font-black mb-4 drop-shadow-md text-white whitespace-nowrap">{t.bento.feedbackTitle}</h3>
                                             <p className="text-lg md:text-xl text-white/90 font-medium drop-shadow-md whitespace-pre-wrap leading-relaxed">{t.bento.feedbackDesc}</p>
                                         </div>
