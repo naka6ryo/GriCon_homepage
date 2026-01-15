@@ -298,9 +298,22 @@
                             
                             // Enable transparency for all materials
                             model.traverse((node) => {
-                                if (node.isMesh && node.material) {
-                                    node.material.transparent = true;
-                                    node.material.depthWrite = true;
+                                if (node.isMesh) {
+                                    // Handle both single material and array of materials
+                                    const materials = Array.isArray(node.material) ? node.material : [node.material];
+                                    
+                                    materials.forEach((material) => {
+                                        if (material) {
+                                            material.transparent = true;
+                                            material.depthWrite = true;
+                                            material.side = window.THREE.DoubleSide;
+                                            material.blending = window.THREE.NormalBlending;
+                                            // Force opacity to 1.0 if not already set
+                                            if (material.opacity === undefined || material.opacity === 0) {
+                                                material.opacity = 1.0;
+                                            }
+                                        }
+                                    });
                                 }
                             });
                             
