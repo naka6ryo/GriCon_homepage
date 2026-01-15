@@ -1020,6 +1020,15 @@
             );
             const smoothHeaderOpacity = useSpring(headerOpacity, { damping: 30, stiffness: 200 });
 
+            // ぼかしの強さ: 同じタイミングで0pxから8pxへ段階的に
+            const blurAmount = useTransform(
+                scrollY,
+                [typeof window !== 'undefined' ? window.innerHeight : 800, typeof window !== 'undefined' ? window.innerHeight + 200 : 1000],
+                [0, 8]
+            );
+            const smoothBlur = useSpring(blurAmount, { damping: 30, stiffness: 200 });
+            const blurFilter = useTransform(smoothBlur, (value) => `blur(${value}px)`);
+
             const toggleLang = () => {
                 setLang(prev => prev === 'en' ? 'jp' : 'en');
             };
@@ -1030,12 +1039,12 @@
 
                     <motion.div className="fixed top-0 left-0 right-0 h-1.5 bg-[#FF4D00] origin-left z-50" style={{ scaleX }} />
 
-                    <nav className={`fixed top-0 w-full z-40 bg-white/0 transition-all duration-300 ${isHeaderBlurred ? 'backdrop-blur-sm' : ''}`}>
-                        <motion.div className="max-w-[90rem] mx-auto px-6 md:px-12 h-20 flex items-center justify-between" style={{ opacity: smoothHeaderOpacity }}>
-                            <div className="flex items-center gap-3 group cursor-pointer">
+                    <motion.nav className="fixed top-0 w-full z-40 bg-white/0" style={{ backdropFilter: blurFilter }}>
+                        <div className="max-w-[90rem] mx-auto px-6 md:px-12 h-20 flex items-center justify-between">
+                            <motion.div className="flex items-center gap-3 group cursor-pointer" style={{ opacity: smoothHeaderOpacity }}>
                                 <span className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-bold text-xl group-hover:bg-[#FF4D00] transition-colors duration-300">G</span>
                                 <span className="text-2xl font-black tracking-tighter mix-blend-difference text-white">GriCon</span>
-                            </div>
+                            </motion.div>
                             <div className="flex items-center gap-4">
                                 <button onClick={toggleLang} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 hover:bg-white transition-colors font-bold text-sm backdrop-blur-md">
                                     <Globe size={16} />
@@ -1047,8 +1056,8 @@
                                     {t.nav.spec} <ArrowRight size={16} />
                                 </a>
                             </div>
-                        </motion.div>
-                    </nav>
+                        </div>
+                    </motion.nav>
 
                     <HeroScrollStory t={t} onLockChange={(locked) => setIsHeaderBlurred(!locked)} />
 
