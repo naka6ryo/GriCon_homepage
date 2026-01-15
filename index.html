@@ -699,6 +699,10 @@
             const [isLocked, setIsLocked] = useState(true);
             const containerRef = useRef(null);
             const touchStartY = useRef(0);
+            const velocityRef = useRef(0);
+            const lastDeltaTimeRef = useRef(0);
+            const lastDeltaRef = useRef(0);
+            const momentumAnimationRef = useRef(null);
 
             const image2Opacity = useTransform(smoothProgress, [0.3, 0.6], [0, 1]);
             const textOpacity = useTransform(smoothProgress, [0.7, 1.0], [0, 1]);
@@ -713,6 +717,44 @@
                 });
                 return unsubscribe;
             }, [isLocked, smoothProgress]);
+
+            // Momentum/Inertia scroll function
+            const applyMomentum = (initialVelocity) => {
+                if (momentumAnimationRef.current) {
+                    cancelAnimationFrame(momentumAnimationRef.current);
+                }
+
+                let velocity = initialVelocity;
+                const friction = 0.92; // Friction coefficient (higher = longer coast)
+                const threshold = 0.001; // Stop when velocity is very small
+
+                const animate = () => {
+                    if (Math.abs(velocity) < threshold) {
+                        momentumAnimationRef.current = null;
+                        return;
+                    }
+
+                    const currentProgress = rawProgress.get();
+                    const nextValue = Math.min(Math.max(currentProgress + velocity, 0), 1);
+                    rawProgress.set(nextValue);
+
+                    // Check boundaries
+                    if (nextValue >= 1 && velocity > 0) {
+                        setIsLocked(false);
+                        momentumAnimationRef.current = null;
+                        return;
+                    }
+                    if (nextValue <= 0 && velocity < 0) {
+                        momentumAnimationRef.current = null;
+                        return;
+                    }
+
+                    velocity *= friction;
+                    momentumAnimationRef.current = requestAnimationFrame(animate);
+                };
+
+                momentumAnimationRef.current = requestAnimationFrame(animate);
+            };
 
             useEffect(() => {
                 const handleWheel = (e) => {
@@ -735,19 +777,61 @@
                         return;
                     }
 
-                    e.preventDefault(); 
+                    e.preventDefault();
+                    
+                    // Calculate velocity for momentum
+                    const now = Date.now();
+                    const deltaTime = now - lastDeltaTimeRef.current;
                     const delta = e.deltaY * 0.0008;
+                    
+                    if (deltaTime > 0) {
+                        velocityRef.current = delta / (deltaTime / 16.67); // Normalize to ~60fps
+                    }
+                    lastDeltaTimeRef.current = now;
+                    lastDeltaRef.current = delta;
+
                     const nextValue = Math.min(Math.max(currentProgress + delta, 0), 1);
                     rawProgress.set(nextValue);
+
+                    // Cancel any ongoing momentum
+                    if (momentumAnimationRef.current) {
+                        cancelAnimationFrame(momentumAnimationRef.current);
+                        momentumAnimationRef.current = null;
+                    }
+                };
+
+                const handleWheelEnd = () => {
+                    // Apply momentum after wheel stops
+                    if (isLocked && Math.abs(velocityRef.current) > 0.001) {
+                        applyMomentum(velocityRef.current * 0.5); // Scale down for smoother effect
+                    }
+                    velocityRef.current = 0;
+                };
+
+                let wheelTimeout;
+                const handleWheelWithMomentum = (e) => {
+                    handleWheel(e);
+                    clearTimeout(wheelTimeout);
+                    wheelTimeout = setTimeout(handleWheelEnd, 150);
                 };
 
                 const handleTouchStart = (e) => {
                     touchStartY.current = e.touches[0].clientY;
+                    velocityRef.current = 0;
+                    lastDeltaTimeRef.current = Date.now();
+                    
+                    // Cancel ongoing momentum
+                    if (momentumAnimationRef.current) {
+                        cancelAnimationFrame(momentumAnimationRef.current);
+                        momentumAnimationRef.current = null;
+                    }
                 };
 
                 const handleTouchMove = (e) => {
                     const touchY = e.touches[0].clientY;
                     const deltaY = touchStartY.current - touchY;
+                    const now = Date.now();
+                    const deltaTime = now - lastDeltaTimeRef.current;
 
                     if (!isLocked) {
                         if (window.scrollY <= 0 && deltaY < 0) {
@@ -771,20 +855,41 @@
                     if (Math.abs(deltaY) > 0) {
                         if (e.cancelable) e.preventDefault();
                         const delta = deltaY * 0.0015;
+                        
+                        // Track velocity for momentum
+                        if (deltaTime > 0) {
+                            velocityRef.current = delta / (deltaTime / 16.67);
+                        }
+                        lastDeltaTimeRef.current = now;
+
                         const nextValue = Math.min(Math.max(currentProgress + delta, 0), 1);
                         rawProgress.set(nextValue);
                         touchStartY.current = touchY; 
                     }
                 };
 
-                window.addEventListener('wheel', handleWheel, { passive: false });
+                const handleTouchEnd = () => {
+                    // Apply momentum after touch ends
+                    if (isLocked && Math.abs(velocityRef.current) > 0.002) {
+                        applyMomentum(velocityRef.current * 0.3);
+                    }
+                    velocityRef.current = 0;
+                };
+
+                window.addEventListener('wheel', handleWheelWithMomentum, { passive: false });
                 window.addEventListener('touchstart', handleTouchStart, { passive: false });
                 window.addEventListener('touchmove', handleTouchMove, { passive: false });
+                window.addEventListener('touchend', handleTouchEnd, { passive: true });
 
                 return () => {
-                    window.removeEventListener('wheel', handleWheel);
+                    window.removeEventListener('wheel', handleWheelWithMomentum);
                     window.removeEventListener('touchstart', handleTouchStart);
                     window.removeEventListener('touchmove', handleTouchMove);
+                    window.removeEventListener('touchend', handleTouchEnd);
+                    clearTimeout(wheelTimeout);
+                    if (momentumAnimationRef.current) {
+                        cancelAnimationFrame(momentumAnimationRef.current);
+                    }
                 };
             }, [isLocked, rawProgress]);
 
