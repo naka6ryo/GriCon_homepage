@@ -1220,7 +1220,7 @@
                     <Section className="bg-[#1D1D1F] text-white text-center py-48 md:py-64 relative">
                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20" />
                         <motion.div key={lang} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-4xl mx-auto relative z-10">
-                            <h2 className="text-4xl md:text-9xl font-black mb-10 tracking-tighter leading-none">{t.cta.title}</h2>
+                            <h2 className="text-4xl md:text-9xl font-black mb-10 tracking-tighter leading-none md:whitespace-nowrap">{t.cta.title}</h2>
                             <p className="text-2xl text-gray-400 mb-16 max-w-2xl mx-auto font-medium whitespace-pre-wrap">{t.cta.desc}</p>
                             <a href={NOTION_LINK} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 px-16 py-6 bg-white text-black rounded-full text-2xl font-bold hover:bg-[#FF4D00] hover:text-white transition-all duration-300 transform hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,77,0,0.4)]">
                                 {t.cta.button} <ExternalLink size={24} />
