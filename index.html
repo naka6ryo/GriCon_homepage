@@ -266,6 +266,8 @@
                     const renderer = new window.THREE.WebGLRenderer({ antialias: true, alpha: true });
                     renderer.setSize(width, height);
                     renderer.setPixelRatio(window.devicePixelRatio);
+                    renderer.setClearAlpha(0);
+                    renderer.setClearColor(0x000000, 0);
                     
                     if (containerRef.current) {
                         containerRef.current.appendChild(renderer.domElement);
@@ -292,7 +294,16 @@
                         modelPath,
                         (gltf) => {
                             const model = gltf.scene;
-                            model.scale.set(1.2, 1.2, 1.2);
+                            model.scale.set(24, 24, 24);
+                            
+                            // Enable transparency for all materials
+                            model.traverse((node) => {
+                                if (node.isMesh && node.material) {
+                                    node.material.transparent = true;
+                                    node.material.depthWrite = true;
+                                }
+                            });
+                            
                             scene.add(model);
                             modelRef.current = model;
 
