@@ -258,13 +258,24 @@
                 // Wait for Three.js to be loaded
                 const checkThreeJs = setInterval(() => {
                     checkCount++;
+                    
+                    const hasOrbitControls = window.OrbitControls || (window.THREE && window.THREE.OrbitControls);
+                    
                     console.log(`[ThreeModelViewer] Checking for Three.js... attempt ${checkCount}`);
                     console.log('[ThreeModelViewer] window.THREE:', !!window.THREE);
                     console.log('[ThreeModelViewer] window.THREE.GLTFLoader:', !!window.THREE?.GLTFLoader);
                     console.log('[ThreeModelViewer] window.OrbitControls:', !!window.OrbitControls);
+                    console.log('[ThreeModelViewer] window.THREE.OrbitControls:', !!window.THREE?.OrbitControls);
                     
-                    if (window.THREE && window.THREE.GLTFLoader && window.OrbitControls) {
+                    if (window.THREE && window.THREE.GLTFLoader && hasOrbitControls) {
                         console.log('[ThreeModelViewer] All dependencies loaded!');
+                        
+                        // Make sure OrbitControls is available
+                        if (!window.OrbitControls && window.THREE.OrbitControls) {
+                            window.OrbitControls = window.THREE.OrbitControls;
+                            console.log('[ThreeModelViewer] Mapped THREE.OrbitControls to window.OrbitControls');
+                        }
+                        
                         clearInterval(checkThreeJs);
                         initializeScene();
                     } else if (checkCount >= maxChecks) {
@@ -1080,6 +1091,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+    <script>
+        // OrbitControls might be loaded as THREE.OrbitControls, make it available as window.OrbitControls
+        if (typeof THREE !== 'undefined' && THREE.OrbitControls) {
+            window.OrbitControls = THREE.OrbitControls;
+            console.log('[Init] OrbitControls mapped from THREE.OrbitControls');
+        }
+    </script>
 </body>
 </html>
