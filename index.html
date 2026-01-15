@@ -233,6 +233,8 @@
         // --- 3D Model Components ---
 
         const ThreeModelViewer = ({ modelPath }) => {
+            console.log('[ThreeModelViewer] Component mounted with modelPath:', modelPath);
+            
             const containerRef = useRef(null);
             const sceneRef = useRef(null);
             const rendererRef = useRef(null);
@@ -242,13 +244,32 @@
             const animationIdRef = useRef(null);
 
             useEffect(() => {
-                if (!containerRef.current) return;
+                console.log('[ThreeModelViewer] useEffect triggered');
+                console.log('[ThreeModelViewer] containerRef.current:', containerRef.current);
+                
+                if (!containerRef.current) {
+                    console.error('[ThreeModelViewer] No container element!');
+                    return;
+                }
+
+                let checkCount = 0;
+                const maxChecks = 50; // 5 seconds max
 
                 // Wait for Three.js to be loaded
                 const checkThreeJs = setInterval(() => {
+                    checkCount++;
+                    console.log(`[ThreeModelViewer] Checking for Three.js... attempt ${checkCount}`);
+                    console.log('[ThreeModelViewer] window.THREE:', !!window.THREE);
+                    console.log('[ThreeModelViewer] window.THREE.GLTFLoader:', !!window.THREE?.GLTFLoader);
+                    console.log('[ThreeModelViewer] window.OrbitControls:', !!window.OrbitControls);
+                    
                     if (window.THREE && window.THREE.GLTFLoader && window.OrbitControls) {
+                        console.log('[ThreeModelViewer] All dependencies loaded!');
                         clearInterval(checkThreeJs);
                         initializeScene();
+                    } else if (checkCount >= maxChecks) {
+                        console.error('[ThreeModelViewer] Timeout waiting for Three.js dependencies');
+                        clearInterval(checkThreeJs);
                     }
                 }, 100);
 
@@ -443,10 +464,21 @@
 
                 return () => {
                     clearInterval(checkThreeJs);
+                    console.log('[ThreeModelViewer] Component unmounting');
                 };
             }, [modelPath]);
 
-            return <div ref={containerRef} className="w-full h-full" />;
+            return (
+                <div 
+                    ref={containerRef} 
+                    className="w-full h-full"
+                    style={{ border: '2px solid red', minHeight: '400px' }}
+                >
+                    <div style={{ color: 'white', position: 'absolute', zIndex: 1000, background: 'rgba(0,0,0,0.7)', padding: '10px' }}>
+                        3D Viewer Container - If you see this, React is rendering
+                    </div>
+                </div>
+            );
         };
 
         // --- CSS 3D Components (Legacy) ---
