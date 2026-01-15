@@ -237,14 +237,14 @@
             const sceneRef = useRef(null);
             const rendererRef = useRef(null);
             const modelRef = useRef(null);
-            const isDraggingRef = useRef(false);
-            const previousMousePositionRef = useRef({ x: 0, y: 0 });
-            const autoRotateRef = useRef(true);
+            const cameraRef = useRef(null);
+            const controlsRef = useRef(null);
+            const animationIdRef = useRef(null);
 
             useEffect(() => {
                 if (!containerRef.current) return;
 
-                // Wait for Three.js and GLTFLoader to be loaded
+                // Wait for Three.js to be loaded
                 const checkThreeJs = setInterval(() => {
                     if (window.THREE && window.THREE.GLTFLoader) {
                         clearInterval(checkThreeJs);
@@ -256,37 +256,69 @@
                     const width = containerRef.current?.clientWidth || 800;
                     const height = containerRef.current?.clientHeight || 600;
 
-                    // Scene setup
+                    // Scene setup with neutral environment
                     const scene = new window.THREE.Scene();
-                    scene.background = new window.THREE.Color(0x101010);
+                    scene.background = new window.THREE.Color(0x000000);
+                    
+                    // Setup camera
+                    const camera = new window.THREE.PerspectiveCamera(60, width / height, 0.01, 1000);
+                    camera.position.set(0, 0, 2.5);
+                    
+                    sceneRef.current = scene;
+                    cameraRef.current = camera;
 
-                    const camera = new window.THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-                    camera.position.z = 2.5;
-
-                    const renderer = new window.THREE.WebGLRenderer({ antialias: true, alpha: true });
+                    // Setup renderer with transparency
+                    const renderer = new window.THREE.WebGLRenderer({ 
+                        antialias: true, 
+                        alpha: true,
+                        preserveDrawingBuffer: true,
+                        powerPreference: 'high-performance'
+                    });
                     renderer.setSize(width, height);
                     renderer.setPixelRatio(window.devicePixelRatio);
                     renderer.setClearAlpha(0);
                     renderer.setClearColor(0x000000, 0);
+                    renderer.outputColorSpace = window.THREE.SRGBColorSpace;
+                    renderer.toneMapping = window.THREE.ACESFilmicToneMapping;
+                    renderer.toneMappingExposure = 1;
                     
                     if (containerRef.current) {
                         containerRef.current.appendChild(renderer.domElement);
                     }
 
-                    sceneRef.current = scene;
                     rendererRef.current = renderer;
 
-                    // Lighting
-                    const ambientLight = new window.THREE.AmbientLight(0xffffff, 0.8);
+                    // Setup PMREM Generator for environment lighting
+                    const pmremGenerator = new window.THREE.PMREMGenerator(renderer);
+                    pmremGenerator.compileEquirectangularShader();
+
+                    // Create neutral environment (Room Environment)
+                    const roomEnvironment = pmremGenerator.fromScene(
+                        new window.THREE.Scene(),
+                        0.04
+                    ).texture;
+                    
+                    scene.environment = roomEnvironment;
+                    scene.background = null; // Keep transparent
+
+                    // Setup lighting
+                    const ambientLight = new window.THREE.AmbientLight(0xffffff, 0.6);
                     scene.add(ambientLight);
 
-                    const directionalLight = new window.THREE.DirectionalLight(0xffffff, 0.6);
-                    directionalLight.position.set(5, 5, 5);
-                    scene.add(directionalLight);
+                    const directionalLight = new window.THREE.DirectionalLight(0xffffff, 1.2 * Math.PI);
+                    directionalLight.position.set(0.5, 1, 0.866);
+                    directionalLight.name = 'main_light';
+                    camera.add(directionalLight);
+                    scene.add(camera);
 
-                    const pointLight = new window.THREE.PointLight(0xFF4D00, 0.4);
-                    pointLight.position.set(-3, 2, 3);
-                    scene.add(pointLight);
+                    // Setup OrbitControls
+                    const controls = new window.THREE.OrbitControls(camera, renderer.domElement);
+                    controls.screenSpacePanning = true;
+                    controls.autoRotate = true;
+                    controls.autoRotateSpeed = 2;
+                    controls.enableDamping = true;
+                    controls.dampingFactor = 0.05;
+                    controlsRef.current = controls;
 
                     // Load GLB model
                     const loader = new window.THREE.GLTFLoader();
@@ -294,12 +326,20 @@
                         modelPath,
                         (gltf) => {
                             const model = gltf.scene;
-                            model.scale.set(24, 24, 24);
                             
+                            // Auto-scale and center model
+                            const box = new window.THREE.Box3().setFromObject(model);
+                            const size = box.getSize(new window.THREE.Vector3());
+                            const maxDim = Math.max(size.x, size.y, size.z);
+                            const scale = 1 / maxDim;
+                            model.scale.multiplyScalar(scale * 24);
+
+                            const center = box.getCenter(new window.THREE.Vector3());
+                            model.position.sub(center.multiplyScalar(scale * 24));
+
                             // Enable transparency for all materials
                             model.traverse((node) => {
                                 if (node.isMesh) {
-                                    // Handle both single material and array of materials
                                     const materials = Array.isArray(node.material) ? node.material : [node.material];
                                     
                                     materials.forEach((material) => {
@@ -308,7 +348,6 @@
                                             material.depthWrite = true;
                                             material.side = window.THREE.DoubleSide;
                                             material.blending = window.THREE.NormalBlending;
-                                            // Force opacity to 1.0 if not already set
                                             if (material.opacity === undefined || material.opacity === 0) {
                                                 material.opacity = 1.0;
                                             }
@@ -320,53 +359,38 @@
                             scene.add(model);
                             modelRef.current = model;
 
+                            // Setup camera to view model
+                            controls.reset();
+                            controls.maxDistance = size.length() * 10;
+                            camera.near = size.length() / 100;
+                            camera.far = size.length() * 100;
+                            camera.updateProjectionMatrix();
+
+                            camera.position.copy(center);
+                            camera.position.x += size.length() / 2;
+                            camera.position.y += size.length() / 3;
+                            camera.position.z += size.length() / 2;
+                            camera.lookAt(center);
+
                             // Animation loop
-                            const animate = () => {
-                                requestAnimationFrame(animate);
+                            let prevTime = 0;
+                            const animate = (time) => {
+                                animationIdRef.current = requestAnimationFrame(animate);
 
-                                if (autoRotateRef.current && modelRef.current && !isDraggingRef.current) {
-                                    modelRef.current.rotation.y += 0.003;
-                                }
+                                const dt = (time - prevTime) / 1000;
+                                prevTime = time;
 
+                                controls.update();
                                 renderer.render(scene, camera);
                             };
 
-                            animate();
+                            animate(0);
                         },
                         undefined,
                         (error) => {
                             console.error('Error loading GLB model:', error);
                         }
                     );
-
-                    // Mouse controls
-                    const onMouseDown = (e) => {
-                        isDraggingRef.current = true;
-                        autoRotateRef.current = false;
-                        previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
-                    };
-
-                    const onMouseMove = (e) => {
-                        if (!isDraggingRef.current || !modelRef.current) return;
-
-                        const deltaX = e.clientX - previousMousePositionRef.current.x;
-                        const deltaY = e.clientY - previousMousePositionRef.current.y;
-
-                        modelRef.current.rotation.y += deltaX * 0.01;
-                        modelRef.current.rotation.x += deltaY * 0.01;
-
-                        previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
-                    };
-
-                    const onMouseUp = () => {
-                        isDraggingRef.current = false;
-                        autoRotateRef.current = true;
-                    };
-
-                    renderer.domElement.addEventListener('mousedown', onMouseDown);
-                    renderer.domElement.addEventListener('mousemove', onMouseMove);
-                    renderer.domElement.addEventListener('mouseup', onMouseUp);
-                    renderer.domElement.addEventListener('mouseleave', onMouseUp);
 
                     // Handle window resize
                     const handleResize = () => {
@@ -385,10 +409,11 @@
 
                     return () => {
                         window.removeEventListener('resize', handleResize);
-                        renderer.domElement.removeEventListener('mousedown', onMouseDown);
-                        renderer.domElement.removeEventListener('mousemove', onMouseMove);
-                        renderer.domElement.removeEventListener('mouseup', onMouseUp);
-                        renderer.domElement.removeEventListener('mouseleave', onMouseUp);
+                        if (animationIdRef.current) {
+                            cancelAnimationFrame(animationIdRef.current);
+                        }
+                        pmremGenerator.dispose();
+                        renderer.dispose();
                         if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
                             containerRef.current.removeChild(renderer.domElement);
                         }
