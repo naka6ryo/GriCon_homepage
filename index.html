@@ -246,7 +246,7 @@
 
                 // Wait for Three.js to be loaded
                 const checkThreeJs = setInterval(() => {
-                    if (window.THREE && window.THREE.GLTFLoader) {
+                    if (window.THREE && window.THREE.GLTFLoader && window.OrbitControls) {
                         clearInterval(checkThreeJs);
                         initializeScene();
                     }
