@@ -756,7 +756,7 @@
 
         // --- Hero Section ---
 
-        const HeroScrollStory = ({ t }) => {
+        const HeroScrollStory = ({ t, onLockChange }) => {
             const rawProgress = useMotionValue(0);
             const smoothProgress = useSpring(rawProgress, { damping: 30, stiffness: 200 });
             const [isLocked, setIsLocked] = useState(true);
@@ -772,6 +772,12 @@
             const textOpacity = useTransform(smoothProgress, [0.7, 1.0], [0, 1]);
             const textY = useTransform(smoothProgress, [0.7, 1.0], [50, 0]);
             const progressWidth = useTransform(smoothProgress, [0, 1], ["0%", "100%"]);
+
+            useEffect(() => {
+                if (onLockChange) {
+                    onLockChange(isLocked);
+                }
+            }, [isLocked, onLockChange]);
 
             useEffect(() => {
                 const unsubscribe = smoothProgress.on("change", (latest) => {
@@ -996,6 +1002,7 @@
         const GriConLanding = () => {
             const [lang, setLang] = useState('jp'); 
             const [selectedGame, setSelectedGame] = useState(null);
+            const [isHeaderBlurred, setIsHeaderBlurred] = useState(false);
             const t = CONTENT[lang];
             
             const { scrollYProgress } = useScroll();
@@ -1015,7 +1022,7 @@
 
                     <motion.div className="fixed top-0 left-0 right-0 h-1.5 bg-[#FF4D00] origin-left z-50" style={{ scaleX }} />
 
-                    <nav className="fixed top-0 w-full z-40 bg-white/0 backdrop-blur-sm transition-all duration-300">
+                    <nav className={`fixed top-0 w-full z-40 bg-white/0 transition-all duration-300 ${isHeaderBlurred ? 'backdrop-blur-sm' : ''}`}>
                         <div className="max-w-[90rem] mx-auto px-6 md:px-12 h-20 flex items-center justify-between">
                             <div className="flex items-center gap-3 group cursor-pointer">
                                 <span className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-bold text-xl group-hover:bg-[#FF4D00] transition-colors duration-300">G</span>
@@ -1035,7 +1042,7 @@
                         </div>
                     </nav>
 
-                    <HeroScrollStory t={t} />
+                    <HeroScrollStory t={t} onLockChange={(locked) => setIsHeaderBlurred(!locked)} />
 
                     {/* Bento Grid Features Section */}
                     <Section className="bg-white">
