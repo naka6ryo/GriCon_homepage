@@ -10,8 +10,8 @@
     
     <!-- Preload critical images -->
     <link rel="preload" as="image" href="Pictures/Logo.jpg">
-    <link rel="preload" as="image" href="Pictures/TitlePC01.png" media="(min-width: 768px)">
-    <link rel="preload" as="image" href="Pictures/TitleMobile01.png" media="(max-width: 767px)">
+    <link rel="preload" as="image" href="Pictures/TitlePC01.jpg" media="(min-width: 768px)">
+    <link rel="preload" as="image" href="Pictures/TitleMobile01.jpg" media="(max-width: 767px)">
 
     
     <!-- Open Graph / Facebook -->
@@ -180,7 +180,7 @@
             { id: 2, src: "Pictures/Garary02.jpg", alt: "Gallery 2", span: "col-span-1 row-span-2" },
             { id: 3, src: "Pictures/Garary03.jpg", alt: "Gallery 3", span: "col-span-1 row-span-1" },
             { id: 4, src: "Pictures/Garary04.jpg", alt: "Gallery 4", span: "col-span-2 row-span-1" },
-            { id: 5, src: "Pictures/Garary05.PNG", alt: "Gallery 5", span: "col-span-1 row-span-1" },
+            { id: 5, src: "Pictures/Garary05.jpg", alt: "Gallery 5", span: "col-span-1 row-span-1" },
         ];
 
         const NOTION_LINK = "https://flossy-band-678.notion.site/GriCon-Arduino-Unity-16a9ff2ca96c8032b9a5cc3768512383";
@@ -1038,16 +1038,16 @@
             return (
                 <section ref={containerRef} className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-white">
                     <div className="absolute inset-0 z-0 hidden md:block">
-                        <img src="Pictures/TitlePC01.png" alt="GriCon Concept PC 1" className="w-full h-full object-contain" fetchpriority="high" />
+                        <img src="Pictures/TitlePC01.jpg" alt="GriCon Concept PC 1" className="w-full h-full object-contain" fetchpriority="high" />
                         <div className="absolute inset-0 bg-white/20" /> 
                     </div>
                     <div className="absolute inset-0 z-0 md:hidden">
-                        <img src="Pictures/TitleMobile01.png" alt="GriCon Concept Mobile 1" className="w-full h-full object-contain" fetchpriority="high" />
+                        <img src="Pictures/TitleMobile01.jpg" alt="GriCon Concept Mobile 1" className="w-full h-full object-contain" fetchpriority="high" />
                         <div className="absolute inset-0 bg-white/20" /> 
                     </div>
                     <motion.div className="absolute inset-0 z-10" style={{ opacity: image2Opacity }}>
-                        <img src="Pictures/TitlePC02.png" alt="GriCon Concept PC 2" className="hidden md:block w-full h-full object-contain" loading="eager" />
-                        <img src="Pictures/TitleMobile02.png" alt="GriCon Concept Mobile 2" className="md:hidden w-full h-full object-contain" loading="eager" />
+                        <img src="Pictures/TitlePC02.jpg" alt="GriCon Concept PC 2" className="hidden md:block w-full h-full object-contain" loading="eager" />
+                        <img src="Pictures/TitleMobile02.jpg" alt="GriCon Concept Mobile 2" className="md:hidden w-full h-full object-contain" loading="eager" />
                     </motion.div>
                     <motion.div className="absolute inset-0 z-10" style={{ opacity: overlayOpacity }}>
                         <div className="absolute inset-0 bg-black/30" />
@@ -1191,7 +1191,7 @@
                                     
                                     <div className="w-full h-64 md:h-[400px] mt-8 rounded-3xl overflow-hidden relative shadow-inner">
                                         <img 
-                                            src="Pictures/Grab.PNG" 
+                                            src="Pictures/Grab.jpg" 
                                             alt="Twist & Move Animation"
                                             loading="lazy"
                                             decoding="async" 
