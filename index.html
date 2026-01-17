@@ -285,21 +285,34 @@
             const pmremGeneratorRef = useRef(null);
             const cameraRef = useRef(null);
             const requestIdRef = useRef(null);
+            const [isThreeReady, setIsThreeReady] = useState(false);
+            const handleResizeRef = useRef(null);
 
             useEffect(() => {
                 if (!containerRef.current) return;
 
-                // Wait for Three.js and GLTFLoader to be loaded
+                // Wait for Three.js and GLTFLoader to be loaded with timeout
+                let attempts = 0;
+                const maxAttempts = 100; // 10 seconds max
+                
                 const checkThreeJs = setInterval(() => {
+                    attempts++;
+                    
                     if (window.THREE && window.THREE.GLTFLoader && window.THREE.OrbitControls && window.THREE.RGBELoader) {
                         clearInterval(checkThreeJs);
+                        setIsThreeReady(true);
                         initializeScene();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkThreeJs);
+                        console.error('Three.js failed to load in time');
                     }
                 }, 100);
 
                 const initializeScene = () => {
-                    const width = containerRef.current?.clientWidth || 800;
-                    const height = containerRef.current?.clientHeight || 600;
+                    if (!containerRef.current) return;
+                    
+                    const width = containerRef.current.clientWidth || 800;
+                    const height = containerRef.current.clientHeight || 600;
 
                     // Scene setup
                     const scene = new window.THREE.Scene();
@@ -512,57 +525,70 @@
 
                         renderer.setSize(newWidth, newHeight);
                     };
-
+                    
+                    handleResizeRef.current = handleResize;
                     window.addEventListener('resize', handleResize);
+                };
 
-                    return () => {
-                        window.removeEventListener('resize', handleResize);
-                        
-                        if (requestIdRef.current) {
-                            cancelAnimationFrame(requestIdRef.current);
-                        }
-                        
-                        if (controlsRef.current) {
-                            controlsRef.current.dispose();
-                        }
-                        
-                        if (pmremGeneratorRef.current) {
-                            pmremGeneratorRef.current.dispose();
-                        }
-                        
-                        if (modelRef.current) {
-                            modelRef.current.traverse((node) => {
-                                if (node.geometry) node.geometry.dispose();
-                                if (node.material) {
-                                    const materials = Array.isArray(node.material) ? node.material : [node.material];
-                                    materials.forEach(mat => {
-                                        Object.keys(mat).forEach(key => {
-                                            if (mat[key] && mat[key].isTexture) {
-                                                mat[key].dispose();
-                                            }
-                                        });
-                                        mat.dispose();
+                // Cleanup function
+                const cleanup = () => {
+                    if (handleResizeRef.current) {
+                        window.removeEventListener('resize', handleResizeRef.current);
+                    }
+                    
+                    if (requestIdRef.current) {
+                        cancelAnimationFrame(requestIdRef.current);
+                    }
+                    
+                    if (controlsRef.current) {
+                        controlsRef.current.dispose();
+                    }
+                    
+                    if (pmremGeneratorRef.current) {
+                        pmremGeneratorRef.current.dispose();
+                    }
+                    
+                    if (modelRef.current) {
+                        modelRef.current.traverse((node) => {
+                            if (node.geometry) node.geometry.dispose();
+                            if (node.material) {
+                                const materials = Array.isArray(node.material) ? node.material : [node.material];
+                                materials.forEach(mat => {
+                                    Object.keys(mat).forEach(key => {
+                                        if (mat[key] && mat[key].isTexture) {
+                                            mat[key].dispose();
+                                        }
                                     });
-                                }
-                            });
+                                    mat.dispose();
+                                });
+                            }
+                        });
+                    }
+                    
+                    if (rendererRef.current) {
+                        if (containerRef.current && rendererRef.current.domElement.parentNode === containerRef.current) {
+                            containerRef.current.removeChild(rendererRef.current.domElement);
                         }
-                        
-                        if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
-                            containerRef.current.removeChild(renderer.domElement);
-                        }
-                        
-                        if (rendererRef.current) {
-                            rendererRef.current.dispose();
-                        }
-                    };
+                        rendererRef.current.dispose();
+                    }
                 };
 
                 return () => {
                     clearInterval(checkThreeJs);
+                    cleanup();
                 };
             }, [modelPath]);
 
-            return <div ref={containerRef} className="w-full h-full" style={{ cursor: 'grab' }} />;
+            return (
+                <div ref={containerRef} className="w-full h-full flex items-center justify-center" style={{ cursor: isThreeReady ? 'grab' : 'wait' }}>
+                    {!isThreeReady && (
+                        <div className="text-white text-center">
+                            <div className="w-16 h-16 border-4 border-gray-700 border-t-[#FF4D00] rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-gray-400 font-medium">Loading 3D Model...</p>
+                        </div>
+                    )}
+                </div>
+            );
         };
 
         // --- CSS 3D Components (Legacy) ---
@@ -1305,50 +1331,11 @@
         root.render(<GriConLanding />);
     </script>
 
-    <!-- Three.js for 3D Model Viewer - Lazy loaded when needed -->
-    <script>
-        // Lazy load Three.js only when user scrolls near the 3D model section
-        let threeJsLoaded = false;
-        function loadThreeJs() {
-            if (threeJsLoaded) return;
-            threeJsLoaded = true;
-            
-            const scripts = [
-                'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
-                'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
-                'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js',
-                'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js',
-                'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js'
-            ];
-            
-            scripts.forEach((src, index) => {
-                const script = document.createElement('script');
-                script.src = src;
-                if (index > 0) script.defer = true;
-                document.body.appendChild(script);
-            });
-        }
-        
-        // Load Three.js when page is fully loaded
-        window.addEventListener('load', () => {
-            // Check if user is near 3D section or load after a delay
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        loadThreeJs();
-                        observer.disconnect();
-                    }
-                });
-            }, { rootMargin: '500px' });
-            
-            const modelSection = document.getElementById('model-view');
-            if (modelSection) {
-                observer.observe(modelSection);
-            }
-            
-            // Fallback: load after 2 seconds even if not scrolled
-            setTimeout(loadThreeJs, 2000);
-        });
-    </script>
+    <!-- Three.js for 3D Model Viewer - Load with low priority but before React app needs it -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js" defer></script>
 </body>
 </html>
